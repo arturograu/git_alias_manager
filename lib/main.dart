@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:git_alias_manager/view/alias_list_screen.dart';
+import 'package:hux/hux.dart';
 
 void main() {
   runApp(const MainApp());
@@ -9,12 +11,12 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+    return MaterialApp(
+      title: 'Git Alias Manager',
+      theme: HuxTheme.lightTheme,
+      darkTheme: HuxTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      home: AliasListScreen(),
     );
   }
 }
