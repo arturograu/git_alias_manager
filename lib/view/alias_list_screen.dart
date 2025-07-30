@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:git_alias_manager/models/alias.dart';
+import 'package:git_alias_manager/services/git_config_service.dart';
 import 'package:hux/hux.dart';
 
 class AliasListScreen extends StatefulWidget {
@@ -10,21 +11,58 @@ class AliasListScreen extends StatefulWidget {
 }
 
 class _AliasListScreenState extends State<AliasListScreen> {
+  final _gitService = GitConfigService();
   final _nameController = TextEditingController();
   final _commandController = TextEditingController();
-  final List<GitAlias> _aliases = [];
+  List<GitAlias> _aliases = [];
 
-  void _addAlias() {
+  Future<void> _loadAliases() async {
+    try {
+      final aliases = await _gitService.getAliases();
+      setState(() => _aliases = aliases);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load aliases: $e')));
+      }
+    }
+  }
+
+  Future<void> _addAlias() async {
     final name = _nameController.text.trim();
     final command = _commandController.text.trim();
 
     if (name.isEmpty || command.isEmpty) return;
+
+    try {
+      await _gitService.addAlias(name, command);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save alias: $e')));
+      }
+    }
 
     setState(() {
       _aliases.add(GitAlias(name: name, command: command));
       _nameController.clear();
       _commandController.clear();
     });
+  }
+
+  Future<void> _deleteAlias(String name) async {
+    await _gitService.deleteAlias(name);
+    setState(() {
+      _aliases.removeWhere((alias) => alias.name == name);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAliases();
   }
 
   @override
@@ -62,11 +100,7 @@ class _AliasListScreenState extends State<AliasListScreen> {
                     subtitle: Text(alias.command),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        setState(() {
-                          _aliases.removeAt(index);
-                        });
-                      },
+                      onPressed: () => _deleteAlias(alias.name),
                     ),
                   );
                 },
