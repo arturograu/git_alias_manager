@@ -78,10 +78,12 @@ class _AliasListScreenState extends State<AliasListScreen> {
               label: 'Alias name',
               hint: 'e.g. lg',
             ),
+            const SizedBox(height: 8),
             HuxTextField(
               controller: _commandController,
               label: 'Git command',
               hint: 'e.g. log --oneline',
+              onSubmitted: (_) => _addAlias(),
             ),
             const SizedBox(height: 8),
             Align(

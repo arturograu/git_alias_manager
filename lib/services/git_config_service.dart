@@ -4,7 +4,16 @@ import 'package:git_alias_manager/models/alias.dart';
 
 class GitConfigService {
   Future<void> addAlias(String name, String command) async {
-    await Process.run('git', ['config', '--global', 'alias.$name', command]);
+    final result = await Process.run('git', [
+      'config',
+      '--global',
+      'alias.$name',
+      command,
+    ]);
+
+    if (result.exitCode != 0) {
+      throw Exception('Failed to add alias: ${result.stderr}');
+    }
   }
 
   Future<List<GitAlias>> getAliases() async {
@@ -14,7 +23,10 @@ class GitConfigService {
       '--get-regexp',
       '^alias\\.',
     ]);
-    if (result.exitCode != 0) return [];
+
+    if (result.exitCode != 0) {
+      throw Exception('Failed to get aliases: ${result.stderr}');
+    }
 
     final lines = result.stdout.toString().split('\n');
     return lines.where((line) => line.trim().isNotEmpty).map((line) {
@@ -26,6 +38,14 @@ class GitConfigService {
   }
 
   Future<void> deleteAlias(String name) async {
-    await Process.run('git', ['config', '--global', '--unset', 'alias.$name']);
+    final result = await Process.run('git', [
+      'config',
+      '--global',
+      '--unset',
+      'alias.$name',
+    ]);
+    if (result.exitCode != 0) {
+      throw Exception('Failed to delete alias: ${result.stderr}');
+    }
   }
 }
