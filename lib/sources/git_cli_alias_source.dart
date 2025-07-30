@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:git_alias_manager/models/alias.dart';
+import 'package:git_alias_manager/sources/git_alias_source.dart';
 
-class GitConfigService {
+class GitCliAliasSource implements GitAliasSource {
+  @override
   Future<void> addAlias(String name, String command) async {
     final result = await Process.run('git', [
       'config',
@@ -16,6 +18,7 @@ class GitConfigService {
     }
   }
 
+  @override
   Future<List<GitAlias>> getAliases() async {
     final result = await Process.run('git', [
       'config',
@@ -37,6 +40,7 @@ class GitConfigService {
     }).toList();
   }
 
+  @override
   Future<void> deleteAlias(String name) async {
     final result = await Process.run('git', [
       'config',

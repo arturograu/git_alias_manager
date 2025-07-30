@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:git_alias_manager/models/alias.dart';
-import 'package:git_alias_manager/services/git_config_service.dart';
+import 'package:git_alias_manager/sources/git_alias_source.dart';
 import 'package:hux/hux.dart';
 
 class AliasListScreen extends StatefulWidget {
-  const AliasListScreen({super.key});
+  const AliasListScreen({super.key, required this.gitAliasSource});
+
+  final GitAliasSource gitAliasSource;
 
   @override
   State<AliasListScreen> createState() => _AliasListScreenState();
 }
 
 class _AliasListScreenState extends State<AliasListScreen> {
-  final _gitService = GitConfigService();
   final _nameController = TextEditingController();
   final _commandController = TextEditingController();
   List<GitAlias> _aliases = [];
 
   Future<void> _loadAliases() async {
     try {
-      final aliases = await _gitService.getAliases();
+      final aliases = await widget.gitAliasSource.getAliases();
       setState(() => _aliases = aliases);
     } catch (e) {
       if (mounted) {
@@ -36,7 +37,7 @@ class _AliasListScreenState extends State<AliasListScreen> {
     if (name.isEmpty || command.isEmpty) return;
 
     try {
-      await _gitService.addAlias(name, command);
+      await widget.gitAliasSource.addAlias(name, command);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -53,7 +54,7 @@ class _AliasListScreenState extends State<AliasListScreen> {
   }
 
   Future<void> _deleteAlias(String name) async {
-    await _gitService.deleteAlias(name);
+    await widget.gitAliasSource.deleteAlias(name);
     setState(() {
       _aliases.removeWhere((alias) => alias.name == name);
     });

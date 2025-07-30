@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:git_alias_manager/sources/git_cli_alias_source.dart';
 import 'package:git_alias_manager/view/alias_list_screen.dart';
 import 'package:hux/hux.dart';
 
 void main() {
-  runApp(const MainApp());
+  final gitAliasSource = GitCliAliasSource();
+  runApp(MainApp(gitAliasSource: gitAliasSource));
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  const MainApp({super.key, required this.gitAliasSource});
+
+  final GitCliAliasSource gitAliasSource;
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +20,7 @@ class MainApp extends StatelessWidget {
       theme: HuxTheme.lightTheme,
       darkTheme: HuxTheme.darkTheme,
       themeMode: ThemeMode.system,
-      home: AliasListScreen(),
+      home: AliasListScreen(gitAliasSource: gitAliasSource),
     );
   }
 }
