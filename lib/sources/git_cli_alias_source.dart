@@ -7,6 +7,10 @@ class GitCliAliasSource implements GitAliasSource {
 
   final SystemCommandRunner _commandRunner;
 
+  // Should be bigger bigger than 1 since 0 is a valid exit code and 1 is used
+  // for valid but empty content.
+  bool _isInvalidExitCode(int exitCode) => exitCode > 1;
+
   (String, List<String>) _buildCommand(List<String> subcommand) {
     return ('git', ['config', '--global', ...subcommand]);
   }
@@ -19,7 +23,7 @@ class GitCliAliasSource implements GitAliasSource {
     ]);
     final result = await _commandRunner.run(executable, arguments);
 
-    if (result.exitCode != 0) {
+    if (_isInvalidExitCode(result.exitCode)) {
       throw Exception('Failed to add alias: ${result.stderr}');
     }
   }
@@ -32,7 +36,7 @@ class GitCliAliasSource implements GitAliasSource {
     ]);
     final result = await _commandRunner.run(executable, arguments);
 
-    if (result.exitCode != 0) {
+    if (_isInvalidExitCode(result.exitCode)) {
       throw Exception('Failed to get aliases: ${result.stderr}');
     }
 
