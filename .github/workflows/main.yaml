@@ -23,7 +23,7 @@ jobs:
         uses: flutter-actions/setup-fvm@v2
 
       - name: Install Flutter via FVM
-        uses: subosito/flutter-action@v2.19.0
+        uses: subosito/flutter-action@v2.21.0
 
       - name: Install Dependencies
         run: fvm flutter packages get
