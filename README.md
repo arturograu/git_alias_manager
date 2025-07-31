@@ -2,6 +2,8 @@
 
 A cross-platform desktop Flutter app to view, add, and manage your global Git command aliases.
 
+![Screenshot of the Git Alias Manager app](screenshot.png)
+
 ## About the project
 
 This is a minimal project built to solve a specific problem quickly and effectively. The architecture has been intentionally kept simple to focus on delivering value fast. For now, there's no dedicated state management solution in place, but that can evolve as the project grows.
