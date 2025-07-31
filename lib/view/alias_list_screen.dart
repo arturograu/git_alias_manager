@@ -21,11 +21,10 @@ class _AliasListScreenState extends State<AliasListScreen> {
       final aliases = await widget.gitAliasSource.getAliases();
       setState(() => _aliases = aliases);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load aliases: $e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load aliases: $e')));
     }
   }
 
@@ -40,11 +39,10 @@ class _AliasListScreenState extends State<AliasListScreen> {
     try {
       await widget.gitAliasSource.addAlias(alias);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to save alias: $e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save alias: $e')));
     }
 
     setState(() {
@@ -90,26 +88,38 @@ class _AliasListScreenState extends State<AliasListScreen> {
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
-              child: HuxButton(onPressed: _addAlias, child: Text('Add')),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.separated(
-                itemCount: _aliases.length,
-                separatorBuilder: (_, __) => const Divider(),
-                itemBuilder: (_, index) {
-                  final alias = _aliases[index];
-                  return ListTile(
-                    title: Text(alias.name),
-                    subtitle: Text(alias.command),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => _deleteAlias(alias.name),
-                    ),
-                  );
-                },
+              child: HuxButton(
+                key: Key('add_alias_button'),
+                onPressed: _addAlias,
+                child: Text('Add'),
               ),
             ),
+            const SizedBox(height: 16),
+            _aliases.isEmpty
+                ? Text(
+                    'No aliases found',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  )
+                : Expanded(
+                    child: ListView.separated(
+                      itemCount: _aliases.length,
+                      separatorBuilder: (_, __) => const Divider(),
+                      itemBuilder: (_, index) {
+                        final alias = _aliases[index];
+                        return ListTile(
+                          title: Text(alias.name),
+                          subtitle: Text(alias.command),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete),
+                            // TODO: Add provider so we can call the `GitAliasSource` methods
+                            // directly without needing to pass it around.
+                            // This will also allow us to split the UI in a cleaner way.
+                            onPressed: () => _deleteAlias(alias.name),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ],
         ),
       ),

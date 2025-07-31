@@ -1,8 +1,13 @@
-class GitAlias {
+import 'package:equatable/equatable.dart';
+
+class GitAlias extends Equatable {
   final String name;
   final String command;
 
-  GitAlias({required this.name, required this.command});
+  const GitAlias({required this.name, required this.command});
+
+  @override
+  List<Object?> get props => [name, command];
 }
 
 abstract class GitAliasSource {
