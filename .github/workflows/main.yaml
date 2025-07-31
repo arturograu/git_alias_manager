@@ -1,4 +1,4 @@
-name: country_flags
+name: Main workflow
 
 concurrency:
   group: $-$
