@@ -1,4 +1,4 @@
-name: Build desktop apps for release
+name: Build app for release
 
 on:
   push:
@@ -6,57 +6,35 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
-  build:
-    name: Build for macOS, Windows, and Linux
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-
+  build-macos:
+    runs-on: macos-latest
     permissions:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter with FVM
+        uses: kuhnroyal/flutter-fvm-config-action/setup@v3
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Enable desktop platform
-        run: |
-          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            flutter config --enable-macos-desktop
-          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            flutter config --enable-windows-desktop
-          else
-            flutter config --enable-linux-desktop
-          fi
+      - name: Enable macOS
+        run: flutter config --enable-macos-desktop
 
-      - name: Build desktop app
-        run: |
-          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            flutter build macos
-          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            flutter build windows
-          else
-            flutter build linux
-          fi
+      - name: Build macOS app
+        run: flutter build macos
 
-      - name: Archive build artifacts
+      - name: Zip macOS app
         run: |
-          mkdir dist
-          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            zip -r dist/app-macos.zip build/macos/Build/Products/Release/*.app
-          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            zip -r dist/app-windows.zip build/windows/runner/Release/*.exe
-          else
-            zip -r dist/app-linux.zip build/linux/runner/*
-          fi
+          cd build/macos/Build/Products/Release
+          zip -r app-macos.zip *.app
 
-      - name: Upload artifact to GitHub Release
+      - name: Upload build to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: build/macos/Build/Products/Release/app-macos.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
