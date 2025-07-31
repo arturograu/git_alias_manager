@@ -21,16 +21,16 @@ jobs:
       - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
 
       - name: Install Dependencies
-        run: fvm flutter packages get
+        run: flutter packages get
 
       - name: Format
-        run: fvm dart format --set-exit-if-changed .
+        run: dart format --set-exit-if-changed .
 
       - name: Analyze
-        run: fvm flutter analyze lib test example
+        run: flutter analyze lib test example
 
       - name: Run tests
-        run: fvm flutter test --no-pub --coverage --test-randomize-ordering-seed random
+        run: flutter test --no-pub --coverage --test-randomize-ordering-seed random
 
       - name: Check Code Coverage
         uses: VeryGoodOpenSource/very_good_coverage@v3

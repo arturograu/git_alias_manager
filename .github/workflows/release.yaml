@@ -21,26 +21,26 @@ jobs:
       - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
 
       - name: Install dependencies
-        run: fvm flutter pub get
+        run: flutter pub get
 
       - name: Enable desktop platform
         run: |
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            fvm flutter config --enable-macos-desktop
+            flutter config --enable-macos-desktop
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            fvm flutter config --enable-windows-desktop
+            flutter config --enable-windows-desktop
           else
-            fvm flutter config --enable-linux-desktop
+            flutter config --enable-linux-desktop
           fi
 
       - name: Build desktop app
         run: |
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            fvm flutter build macos
+            flutter build macos
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            fvm flutter build windows
+            flutter build windows
           else
-            fvm flutter build linux
+            flutter build linux
           fi
 
       - name: Archive build artifacts
