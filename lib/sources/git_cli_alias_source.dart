@@ -1,17 +1,23 @@
-import 'dart:io';
-
-import 'package:git_alias_manager/models/alias.dart';
+import 'package:git_alias_manager/shell/system_command_runner.dart';
 import 'package:git_alias_manager/sources/git_alias_source.dart';
 
 class GitCliAliasSource implements GitAliasSource {
+  GitCliAliasSource({SystemCommandRunner? commandRunner})
+    : _commandRunner = commandRunner ?? SystemCommandRunner();
+
+  final SystemCommandRunner _commandRunner;
+
+  (String, List<String>) _buildCommand(List<String> subcommand) {
+    return ('git', ['config', '--global', ...subcommand]);
+  }
+
   @override
-  Future<void> addAlias(String name, String command) async {
-    final result = await Process.run('git', [
-      'config',
-      '--global',
-      'alias.$name',
-      command,
+  Future<void> addAlias(GitAlias alias) async {
+    final (executable, arguments) = _buildCommand([
+      'alias.${alias.name}',
+      alias.command,
     ]);
+    final result = await _commandRunner.run(executable, arguments);
 
     if (result.exitCode != 0) {
       throw Exception('Failed to add alias: ${result.stderr}');
@@ -20,34 +26,35 @@ class GitCliAliasSource implements GitAliasSource {
 
   @override
   Future<List<GitAlias>> getAliases() async {
-    final result = await Process.run('git', [
-      'config',
-      '--global',
+    final (executable, arguments) = _buildCommand([
       '--get-regexp',
       '^alias\\.',
     ]);
+    final result = await _commandRunner.run(executable, arguments);
 
     if (result.exitCode != 0) {
       throw Exception('Failed to get aliases: ${result.stderr}');
     }
 
     final lines = result.stdout.toString().split('\n');
-    return lines.where((line) => line.trim().isNotEmpty).map((line) {
-      final parts = line.trim().split(RegExp(r'\s+'));
-      final name = parts[0].replaceFirst('alias.', '');
-      final command = parts.sublist(1).join(' ');
-      return GitAlias(name: name, command: command);
-    }).toList();
+    return lines
+        .where((line) => line.trim().isNotEmpty)
+        .map(_getGitAliasFromLine)
+        .toList();
+  }
+
+  GitAlias _getGitAliasFromLine(String line) {
+    final parts = line.trim().split(' ').where((p) => p.isNotEmpty).toList();
+    final name = parts[0].replaceFirst('alias.', '');
+    final command = parts.sublist(1).join(' ');
+    return GitAlias(name: name, command: command);
   }
 
   @override
   Future<void> deleteAlias(String name) async {
-    final result = await Process.run('git', [
-      'config',
-      '--global',
-      '--unset',
-      'alias.$name',
-    ]);
+    final (executable, arguments) = _buildCommand(['--unset', 'alias.$name']);
+    final result = await _commandRunner.run(executable, arguments);
+
     if (result.exitCode != 0) {
       throw Exception('Failed to delete alias: ${result.stderr}');
     }

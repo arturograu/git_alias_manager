@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:git_alias_manager/models/alias.dart';
 import 'package:git_alias_manager/sources/git_alias_source.dart';
 import 'package:hux/hux.dart';
 
@@ -36,8 +35,10 @@ class _AliasListScreenState extends State<AliasListScreen> {
 
     if (name.isEmpty || command.isEmpty) return;
 
+    final alias = GitAlias(name: name, command: command);
+
     try {
-      await widget.gitAliasSource.addAlias(name, command);
+      await widget.gitAliasSource.addAlias(alias);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(

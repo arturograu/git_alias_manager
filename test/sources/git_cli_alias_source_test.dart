@@ -1,0 +1,184 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:git_alias_manager/shell/system_command_runner.dart';
+import 'package:git_alias_manager/sources/git_alias_source.dart';
+import 'package:git_alias_manager/sources/git_cli_alias_source.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockSystemCommandRunner extends Mock implements SystemCommandRunner {}
+
+void main() {
+  final testAlias = GitAlias(name: 'testAlias', command: 'echo test');
+  late MockSystemCommandRunner systemCommandRunner;
+  late GitCliAliasSource gitAliasSource;
+
+  setUp(() {
+    systemCommandRunner = MockSystemCommandRunner();
+    gitAliasSource = GitCliAliasSource(commandRunner: systemCommandRunner);
+  });
+
+  group('addAlias', () {
+    test(
+      'calls the system command runner with the correct arguments',
+      () async {
+        when(
+          () => systemCommandRunner.run('git', [
+            'config',
+            '--global',
+            'alias.${testAlias.name}',
+            testAlias.command,
+          ]),
+        ).thenAnswer(
+          (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
+        );
+
+        await gitAliasSource.addAlias(testAlias);
+
+        verify(
+          () => systemCommandRunner.run('git', [
+            'config',
+            '--global',
+            'alias.${testAlias.name}',
+            testAlias.command,
+          ]),
+        ).called(1);
+      },
+    );
+
+    test('throws an exception if the command fails', () async {
+      when(
+        () => systemCommandRunner.run('git', [
+          'config',
+          '--global',
+          'alias.${testAlias.name}',
+          testAlias.command,
+        ]),
+      ).thenAnswer(
+        (_) async => CommandResult(exitCode: 1, stdout: '', stderr: 'Error'),
+      );
+
+      expect(
+        () async => gitAliasSource.addAlias(testAlias),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+
+  group('getAliases', () {
+    test(
+      'calls the system command runner with the correct arguments',
+      () async {
+        when(
+          () => systemCommandRunner.run('git', [
+            'config',
+            '--global',
+            '--get-regexp',
+            '^alias\\.',
+          ]),
+        ).thenAnswer(
+          (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
+        );
+
+        await gitAliasSource.getAliases();
+
+        verify(
+          () => systemCommandRunner.run('git', [
+            'config',
+            '--global',
+            '--get-regexp',
+            '^alias\\.',
+          ]),
+        ).called(1);
+      },
+    );
+
+    test('returns a list of GitAlias from the command output', () async {
+      when(
+        () => systemCommandRunner.run('git', [
+          'config',
+          '--global',
+          '--get-regexp',
+          '^alias\\.',
+        ]),
+      ).thenAnswer(
+        (_) async => CommandResult(
+          exitCode: 0,
+          stdout: 'alias.testAlias echo test\nalias.anotherAlias echo another',
+          stderr: '',
+        ),
+      );
+
+      final aliases = await gitAliasSource.getAliases();
+
+      expect(aliases, hasLength(2));
+      expect(aliases[0].name, 'testAlias');
+      expect(aliases[0].command, 'echo test');
+      expect(aliases[1].name, 'anotherAlias');
+      expect(aliases[1].command, 'echo another');
+    });
+
+    test('throws an exception if the command fails', () async {
+      when(
+        () => systemCommandRunner.run('git', [
+          'config',
+          '--global',
+          '--get-regexp',
+          '^alias\\.',
+        ]),
+      ).thenAnswer(
+        (_) async => CommandResult(exitCode: 1, stdout: '', stderr: 'Error'),
+      );
+
+      expect(
+        () async => gitAliasSource.getAliases(),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+
+  group('deleteAlias', () {
+    test(
+      'calls the system command runner with the correct arguments',
+      () async {
+        when(
+          () => systemCommandRunner.run('git', [
+            'config',
+            '--global',
+            '--unset',
+            'alias.${testAlias.name}',
+          ]),
+        ).thenAnswer(
+          (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
+        );
+
+        await gitAliasSource.deleteAlias(testAlias.name);
+
+        verify(
+          () => systemCommandRunner.run('git', [
+            'config',
+            '--global',
+            '--unset',
+            'alias.${testAlias.name}',
+          ]),
+        ).called(1);
+      },
+    );
+
+    test('throws an exception if the command fails', () async {
+      when(
+        () => systemCommandRunner.run('git', [
+          'config',
+          '--global',
+          '--unset',
+          'alias.${testAlias.name}',
+        ]),
+      ).thenAnswer(
+        (_) async => CommandResult(exitCode: 1, stdout: '', stderr: 'Error'),
+      );
+
+      expect(
+        () async => gitAliasSource.deleteAlias(testAlias.name),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+}
