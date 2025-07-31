@@ -18,12 +18,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup FVM
-        uses: flutter-actions/setup-fvm@v2
-
-      - name: Install Flutter via FVM
-        uses: subosito/flutter-action@v2.19.0
+      - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
 
       - name: Install Dependencies
         run: fvm flutter packages get
