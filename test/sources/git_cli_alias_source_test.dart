@@ -53,7 +53,7 @@ void main() {
           testAlias.command,
         ]),
       ).thenAnswer(
-        (_) async => CommandResult(exitCode: 1, stdout: '', stderr: 'Error'),
+        (_) async => CommandResult(exitCode: 2, stdout: '', stderr: 'Error'),
       );
 
       expect(
@@ -125,7 +125,7 @@ void main() {
           '^alias\\.',
         ]),
       ).thenAnswer(
-        (_) async => CommandResult(exitCode: 1, stdout: '', stderr: 'Error'),
+        (_) async => CommandResult(exitCode: 2, stdout: '', stderr: 'Error'),
       );
 
       expect(
@@ -172,7 +172,7 @@ void main() {
           'alias.${testAlias.name}',
         ]),
       ).thenAnswer(
-        (_) async => CommandResult(exitCode: 1, stdout: '', stderr: 'Error'),
+        (_) async => CommandResult(exitCode: 2, stdout: '', stderr: 'Error'),
       );
 
       expect(

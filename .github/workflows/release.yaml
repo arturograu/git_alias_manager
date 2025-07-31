@@ -1,0 +1,65 @@
+name: Build desktop apps for release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+jobs:
+  build:
+    name: Build for macOS, Windows, and Linux
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup FVM
+        uses: flutter-actions/setup-fvm@v2
+
+      - name: Install dependencies
+        run: fvm flutter pub get
+
+      - name: Enable desktop platform
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            fvm flutter config --enable-macos-desktop
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            fvm flutter config --enable-windows-desktop
+          else
+            fvm flutter config --enable-linux-desktop
+          fi
+
+      - name: Build desktop app
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            fvm flutter build macos
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            fvm flutter build windows
+          else
+            fvm flutter build linux
+          fi
+
+      - name: Archive build artifacts
+        run: |
+          mkdir dist
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            zip -r dist/app-macos.zip build/macos/Build/Products/Release/*.app
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            zip -r dist/app-windows.zip build/windows/runner/Release/*.exe
+          else
+            zip -r dist/app-linux.zip build/linux/runner/*
+          fi
+
+      - name: Upload artifact to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

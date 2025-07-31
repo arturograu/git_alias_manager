@@ -1,0 +1,41 @@
+name: country_flags
+
+concurrency:
+  group: $-$
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup FVM
+        uses: flutter-actions/setup-fvm@v2
+
+      - name: Install Flutter via FVM
+        uses: subosito/flutter-action@v2.19.0
+
+      - name: Install Dependencies
+        run: fvm flutter packages get
+
+      - name: Format
+        run: fvm dart format --set-exit-if-changed .
+
+      - name: Analyze
+        run: fvm flutter analyze lib test example
+
+      - name: Run tests
+        run: fvm flutter test --no-pub --coverage --test-randomize-ordering-seed random
+
+      - name: Check Code Coverage
+        uses: VeryGoodOpenSource/very_good_coverage@v3
