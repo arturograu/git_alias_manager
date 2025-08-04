@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:git_alias_manager/sources/git_alias_source.dart';
+import 'package:git_alias_manager/sources/alias_source.dart';
 import 'package:git_alias_manager/view/alias_list_screen.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockGitAliasSource extends Mock implements GitAliasSource {}
+class MockGitAliasSource extends Mock implements AliasSource {}
 
 void main() {
   group('AliasListScreen', () {
-    late GitAliasSource gitAliasSource;
+    late AliasSource gitAliasSource;
 
     setUpAll(() {
-      registerFallbackValue(GitAlias(name: '', command: ''));
+      registerFallbackValue(Alias(name: '', command: ''));
     });
 
     setUp(() {
@@ -34,8 +34,8 @@ void main() {
       testWidgets('list of aliases', (tester) async {
         when(() => gitAliasSource.getAliases()).thenAnswer(
           (_) async => [
-            GitAlias(name: 'alias1', command: 'command1'),
-            GitAlias(name: 'alias2', command: 'command2'),
+            Alias(name: 'alias1', command: 'command1'),
+            Alias(name: 'alias2', command: 'command2'),
           ],
         );
 
@@ -62,9 +62,9 @@ void main() {
       });
 
       testWidgets('addAlias when add button is pressed', (tester) async {
-        final newAlias = GitAlias(name: 'newAlias', command: 'newCommand');
+        final newAlias = Alias(name: 'newAlias', command: 'newCommand');
         when(
-          () => gitAliasSource.addAlias(any(that: isA<GitAlias>())),
+          () => gitAliasSource.addAlias(any(that: isA<Alias>())),
         ).thenAnswer((_) async {});
 
         await tester.pumpWidget(
@@ -81,7 +81,7 @@ void main() {
 
       testWidgets('deleteAlias when delete button is pressed', (tester) async {
         when(() => gitAliasSource.getAliases()).thenAnswer(
-          (_) async => [GitAlias(name: 'aliasToDelete', command: 'command')],
+          (_) async => [Alias(name: 'aliasToDelete', command: 'command')],
         );
         when(() => gitAliasSource.deleteAlias(any())).thenAnswer((_) async {});
 

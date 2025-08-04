@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:git_alias_manager/sources/git_alias_source.dart';
+import 'package:git_alias_manager/sources/alias_source.dart';
 import 'package:hux/hux.dart';
 
 class AliasListScreen extends StatefulWidget {
   const AliasListScreen({super.key, required this.gitAliasSource});
 
-  final GitAliasSource gitAliasSource;
+  final AliasSource gitAliasSource;
 
   @override
   State<AliasListScreen> createState() => _AliasListScreenState();
@@ -14,7 +14,7 @@ class AliasListScreen extends StatefulWidget {
 class _AliasListScreenState extends State<AliasListScreen> {
   final _nameController = TextEditingController();
   final _commandController = TextEditingController();
-  List<GitAlias> _aliases = [];
+  List<Alias> _aliases = [];
 
   Future<void> _loadAliases() async {
     try {
@@ -34,7 +34,7 @@ class _AliasListScreenState extends State<AliasListScreen> {
 
     if (name.isEmpty || command.isEmpty) return;
 
-    final alias = GitAlias(name: name, command: command);
+    final alias = Alias(name: name, command: command);
 
     try {
       await widget.gitAliasSource.addAlias(alias);
@@ -46,7 +46,7 @@ class _AliasListScreenState extends State<AliasListScreen> {
     }
 
     setState(() {
-      _aliases.add(GitAlias(name: name, command: command));
+      _aliases.add(Alias(name: name, command: command));
       _nameController.clear();
       _commandController.clear();
     });

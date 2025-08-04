@@ -1,19 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:git_alias_manager/shell/system_command_runner.dart';
+import 'package:git_alias_manager/sources/alias_source.dart';
 import 'package:git_alias_manager/sources/git_alias_source.dart';
-import 'package:git_alias_manager/sources/git_cli_alias_source.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockSystemCommandRunner extends Mock implements SystemCommandRunner {}
 
 void main() {
-  final testAlias = GitAlias(name: 'testAlias', command: 'echo test');
+  final testAlias = Alias(name: 'testAlias', command: 'echo test');
   late MockSystemCommandRunner systemCommandRunner;
-  late GitCliAliasSource gitAliasSource;
+  late GitAliasSource gitAliasSource;
 
   setUp(() {
     systemCommandRunner = MockSystemCommandRunner();
-    gitAliasSource = GitCliAliasSource(commandRunner: systemCommandRunner);
+    gitAliasSource = GitAliasSource(commandRunner: systemCommandRunner);
   });
 
   group('addAlias', () {

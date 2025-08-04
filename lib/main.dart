@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:git_alias_manager/sources/git_cli_alias_source.dart';
+import 'package:git_alias_manager/sources/git_alias_source.dart';
 import 'package:git_alias_manager/view/alias_list_screen.dart';
 import 'package:hux/hux.dart';
 
 void main() {
-  final gitAliasSource = GitCliAliasSource();
+  final gitAliasSource = GitAliasSource();
   runApp(MainApp(gitAliasSource: gitAliasSource));
 }
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key, required this.gitAliasSource});
 
-  final GitCliAliasSource gitAliasSource;
+  final GitAliasSource gitAliasSource;
 
   @override
   Widget build(BuildContext context) {
