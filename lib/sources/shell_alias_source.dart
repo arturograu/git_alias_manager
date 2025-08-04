@@ -66,18 +66,27 @@ class ShellAliasSource implements AliasSource {
     return lines
         .where((line) => line.trim().isNotEmpty)
         .map((line) {
-          // Matches: alias <name>='<command>'
-          // (\S+) → Captures alias name (no spaces)
-          // (.+?) → Captures alias command (lazy match until closing quote)
-          // '?    → Optional single quote
-          // ^/$   → Match entire line
-          final aliasPattern = RegExp(r"alias\s+(\S+)='?(.+?)'?$");
+          line = line.trim();
 
-          final match = aliasPattern.firstMatch(line.trim());
-          if (match != null) {
-            return Alias(name: match.group(1)!, command: match.group(2)!);
+          // Remove optional "alias " prefix
+          if (line.startsWith('alias ')) {
+            line = line.substring(6).trim();
           }
-          return null;
+
+          // Find the first '='
+          final eqIndex = line.indexOf('=');
+          if (eqIndex == -1) return null;
+
+          final name = line.substring(0, eqIndex).trim();
+          var command = line.substring(eqIndex + 1).trim();
+
+          // Remove surrounding quotes if they match
+          if ((command.startsWith('"') && command.endsWith('"')) ||
+              (command.startsWith("'") && command.endsWith("'"))) {
+            command = command.substring(1, command.length - 1);
+          }
+
+          return Alias(name: name, command: command);
         })
         .whereType<Alias>()
         .toList();
