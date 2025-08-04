@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:git_alias_manager/sources/alias_source.dart';
 import 'package:git_alias_manager/sources/git_alias_source.dart';
-import 'package:hux/hux.dart';
+import 'package:git_alias_manager/sources/shell_alias_source.dart';
+import 'package:git_alias_manager/view/alias_form.dart';
+import 'package:git_alias_manager/view/alias_list.dart';
+import 'package:git_alias_manager/view/alias_type_selector.dart';
 
 class AliasListScreen extends StatefulWidget {
-  const AliasListScreen({super.key, required this.gitAliasSource});
+  const AliasListScreen({
+    super.key,
+    required this.shellAliasSource,
+    required this.gitAliasSource,
+  });
 
+  final ShellAliasSource shellAliasSource;
   final GitAliasSource gitAliasSource;
 
   @override
@@ -14,13 +23,27 @@ class AliasListScreen extends StatefulWidget {
 class _AliasListScreenState extends State<AliasListScreen> {
   final _nameController = TextEditingController();
   final _commandController = TextEditingController();
-  List<GitAlias> _aliases = [];
+
+  bool _isLoading = false;
+  List<Alias> _aliases = [];
+  AliasType _selectedType = AliasType.shell;
+  AliasSource get _currentSource =>
+      _selectedType.isShell ? widget.shellAliasSource : widget.gitAliasSource;
 
   Future<void> _loadAliases() async {
     try {
-      final aliases = await widget.gitAliasSource.getAliases();
-      setState(() => _aliases = aliases);
+      setState(() {
+        _isLoading = true;
+      });
+      final aliases = await _currentSource.getAliases();
+      setState(() {
+        _aliases = aliases;
+        _isLoading = false;
+      });
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -29,16 +52,27 @@ class _AliasListScreenState extends State<AliasListScreen> {
   }
 
   Future<void> _addAlias() async {
+    if (_isLoading) return;
+
     final name = _nameController.text.trim();
     final command = _commandController.text.trim();
 
     if (name.isEmpty || command.isEmpty) return;
 
-    final alias = GitAlias(name: name, command: command);
+    final alias = Alias(name: name, command: command);
 
     try {
-      await widget.gitAliasSource.addAlias(alias);
+      setState(() {
+        _isLoading = true;
+      });
+      await _currentSource.addAlias(alias);
+      setState(() {
+        _isLoading = false;
+      });
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -46,14 +80,14 @@ class _AliasListScreenState extends State<AliasListScreen> {
     }
 
     setState(() {
-      _aliases.add(GitAlias(name: name, command: command));
+      _aliases.add(Alias(name: name, command: command));
       _nameController.clear();
       _commandController.clear();
     });
   }
 
   Future<void> _deleteAlias(String name) async {
-    await widget.gitAliasSource.deleteAlias(name);
+    await _currentSource.deleteAlias(name);
     setState(() {
       _aliases.removeWhere((alias) => alias.name == name);
     });
@@ -68,58 +102,38 @@ class _AliasListScreenState extends State<AliasListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Git Alias Manager')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            HuxTextField(
-              controller: _nameController,
-              label: 'Alias name',
-              hint: 'e.g. lg',
+            AliasTypeSelector(
+              selectedType: _selectedType,
+              onChanged: (type) async {
+                setState(() {
+                  _selectedType = type;
+                });
+                await _loadAliases();
+              },
             ),
-            const SizedBox(height: 8),
-            HuxTextField(
-              controller: _commandController,
-              label: 'Git command',
-              hint: 'e.g. log --oneline',
-              onSubmitted: (_) => _addAlias(),
+            const SizedBox(height: 20),
+            AliasForm(
+              nameHint: 'e.g. ${_selectedType.isShell ? 'll' : 'lg'}',
+              commandHint:
+                  'e.g. ${_selectedType.isShell ? 'ls -alF' : 'log --oneline'}',
+              nameController: _nameController,
+              commandController: _commandController,
+              onAddAlias: _addAlias,
             ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: HuxButton(
-                key: Key('add_alias_button'),
-                onPressed: _addAlias,
-                child: Text('Add'),
-              ),
-            ),
-            const SizedBox(height: 16),
-            _aliases.isEmpty
-                ? Text(
-                    'No aliases found',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  )
-                : Expanded(
-                    child: ListView.separated(
-                      itemCount: _aliases.length,
-                      separatorBuilder: (_, __) => const Divider(),
-                      itemBuilder: (_, index) {
-                        final alias = _aliases[index];
-                        return ListTile(
-                          title: Text(alias.name),
-                          subtitle: Text(alias.command),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete),
-                            // TODO: Add provider so we can call the `GitAliasSource` methods
-                            // directly without needing to pass it around.
-                            // This will also allow us to split the UI in a cleaner way.
-                            onPressed: () => _deleteAlias(alias.name),
-                          ),
-                        );
-                      },
+            const SizedBox(height: 18),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : AliasList(
+                      aliases: _aliases,
+                      selectedType: _selectedType,
+                      onDeleteAlias: _deleteAlias,
                     ),
-                  ),
+            ),
           ],
         ),
       ),

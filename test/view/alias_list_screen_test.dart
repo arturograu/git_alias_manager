@@ -1,46 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:git_alias_manager/sources/alias_source.dart';
 import 'package:git_alias_manager/sources/git_alias_source.dart';
+import 'package:git_alias_manager/sources/shell_alias_source.dart';
 import 'package:git_alias_manager/view/alias_list_screen.dart';
 import 'package:mocktail/mocktail.dart';
+
+class MockShellAliasSource extends Mock implements ShellAliasSource {}
 
 class MockGitAliasSource extends Mock implements GitAliasSource {}
 
 void main() {
   group('AliasListScreen', () {
     late GitAliasSource gitAliasSource;
+    late ShellAliasSource shellAliasSource;
 
     setUpAll(() {
-      registerFallbackValue(GitAlias(name: '', command: ''));
+      registerFallbackValue(Alias(name: '', command: ''));
     });
 
     setUp(() {
       gitAliasSource = MockGitAliasSource();
+      shellAliasSource = MockShellAliasSource();
+      when(() => shellAliasSource.getAliases()).thenAnswer((_) async => []);
       when(() => gitAliasSource.getAliases()).thenAnswer((_) async => []);
     });
 
     group('renders', () {
       testWidgets('empty state', (tester) async {
-        when(() => gitAliasSource.getAliases()).thenAnswer((_) async => []);
+        when(() => shellAliasSource.getAliases()).thenAnswer((_) async => []);
 
         await tester.pumpWidget(
-          MaterialApp(home: AliasListScreen(gitAliasSource: gitAliasSource)),
+          MaterialApp(
+            home: AliasListScreen(
+              shellAliasSource: shellAliasSource,
+              gitAliasSource: gitAliasSource,
+            ),
+          ),
         );
+        await tester.pumpAndSettle();
 
         expect(find.byType(AliasListScreen), findsOneWidget);
-        expect(find.text('No aliases found'), findsOneWidget);
+        expect(find.text('No shell aliases found'), findsOneWidget);
       });
 
       testWidgets('list of aliases', (tester) async {
-        when(() => gitAliasSource.getAliases()).thenAnswer(
+        when(() => shellAliasSource.getAliases()).thenAnswer(
           (_) async => [
-            GitAlias(name: 'alias1', command: 'command1'),
-            GitAlias(name: 'alias2', command: 'command2'),
+            Alias(name: 'alias1', command: 'command1'),
+            Alias(name: 'alias2', command: 'command2'),
           ],
         );
 
         await tester.pumpWidget(
-          MaterialApp(home: AliasListScreen(gitAliasSource: gitAliasSource)),
+          MaterialApp(
+            home: AliasListScreen(
+              gitAliasSource: gitAliasSource,
+              shellAliasSource: shellAliasSource,
+            ),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -55,20 +73,30 @@ void main() {
     group('calls', () {
       testWidgets('getAliases on init', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(home: AliasListScreen(gitAliasSource: gitAliasSource)),
+          MaterialApp(
+            home: AliasListScreen(
+              gitAliasSource: gitAliasSource,
+              shellAliasSource: shellAliasSource,
+            ),
+          ),
         );
 
-        verify(() => gitAliasSource.getAliases()).called(1);
+        verify(() => shellAliasSource.getAliases()).called(1);
       });
 
       testWidgets('addAlias when add button is pressed', (tester) async {
-        final newAlias = GitAlias(name: 'newAlias', command: 'newCommand');
+        final newAlias = Alias(name: 'newAlias', command: 'newCommand');
         when(
-          () => gitAliasSource.addAlias(any(that: isA<GitAlias>())),
+          () => shellAliasSource.addAlias(any(that: isA<Alias>())),
         ).thenAnswer((_) async {});
 
         await tester.pumpWidget(
-          MaterialApp(home: AliasListScreen(gitAliasSource: gitAliasSource)),
+          MaterialApp(
+            home: AliasListScreen(
+              shellAliasSource: shellAliasSource,
+              gitAliasSource: gitAliasSource,
+            ),
+          ),
         );
 
         await tester.enterText(find.byType(TextField).at(0), newAlias.name);
@@ -76,17 +104,24 @@ void main() {
         await tester.tap(find.byKey(Key('add_alias_button')));
         await tester.pumpAndSettle();
 
-        verify(() => gitAliasSource.addAlias(newAlias)).called(1);
+        verify(() => shellAliasSource.addAlias(newAlias)).called(1);
       });
 
       testWidgets('deleteAlias when delete button is pressed', (tester) async {
-        when(() => gitAliasSource.getAliases()).thenAnswer(
-          (_) async => [GitAlias(name: 'aliasToDelete', command: 'command')],
+        when(() => shellAliasSource.getAliases()).thenAnswer(
+          (_) async => [Alias(name: 'aliasToDelete', command: 'command')],
         );
-        when(() => gitAliasSource.deleteAlias(any())).thenAnswer((_) async {});
+        when(
+          () => shellAliasSource.deleteAlias(any()),
+        ).thenAnswer((_) async {});
 
         await tester.pumpWidget(
-          MaterialApp(home: AliasListScreen(gitAliasSource: gitAliasSource)),
+          MaterialApp(
+            home: AliasListScreen(
+              gitAliasSource: gitAliasSource,
+              shellAliasSource: shellAliasSource,
+            ),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -95,7 +130,7 @@ void main() {
         await tester.tap(find.byIcon(Icons.delete));
         await tester.pumpAndSettle();
 
-        verify(() => gitAliasSource.deleteAlias('aliasToDelete')).called(1);
+        verify(() => shellAliasSource.deleteAlias('aliasToDelete')).called(1);
       });
     });
   });
