@@ -33,7 +33,21 @@ class ShellAliasSource implements AliasSource {
   bool _isInvalidExitCode(int exitCode) => exitCode != 0;
 
   @override
-  Future<void> addAlias(Alias alias) async {}
+  Future<void> addAlias(Alias alias) async {
+    // Remove old alias if exists
+    await deleteAlias(alias.name);
+
+    // Build the shell command to append alias to the RC file
+    final addCmd =
+        "echo 'alias ${alias.name}=\"${alias.command}\"' >> $_rcFile";
+
+    final (executable, arguments) = _buildCommand([addCmd]);
+    final result = await _commandRunner.run(executable, arguments);
+
+    if (_isInvalidExitCode(result.exitCode)) {
+      throw Exception('Failed to add alias: ${result.stderr}');
+    }
+  }
 
   @override
   Future<List<Alias>> getAliases() async {
@@ -71,6 +85,15 @@ class ShellAliasSource implements AliasSource {
 
   @override
   Future<void> deleteAlias(String name) async {
-    // Implementation for deleting a Bash alias
+    // Remove any line starting with alias <name>= from the RC file
+    // -i '' is for in-place editing (macOS/BSD sed syntax)
+    final removeCmd = "sed -i '' '/alias $name=/d' $_rcFile";
+
+    final (executable, arguments) = _buildCommand([removeCmd]);
+    final result = await _commandRunner.run(executable, arguments);
+
+    if (_isInvalidExitCode(result.exitCode)) {
+      throw Exception('Failed to delete alias: ${result.stderr}');
+    }
   }
 }
