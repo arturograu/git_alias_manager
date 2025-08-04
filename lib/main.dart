@@ -26,7 +26,6 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Alias Manager',
       theme: HuxTheme.lightTheme,
       darkTheme: HuxTheme.darkTheme,
