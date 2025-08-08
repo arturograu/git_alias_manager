@@ -55,12 +55,13 @@ workflows:
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          # Codemagic deja el secure file en $CM_BUILD_DIR con el mismo nombre
           security import "$CM_BUILD_DIR/developer_id_cert" \
             -k "$KEYCHAIN_PATH" \
             -P "$CERTIFICATE_PASSWORD" \
             -T /usr/bin/codesign
           security list-keychain -d user -s "$KEYCHAIN_PATH"
+          # Ensure codesign can access the key without prompting
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
       - name: Codesign .app
         script: |
@@ -92,19 +93,14 @@ workflows:
 
       - name: Upload notarized zip to GitHub Release
         script: |
-          # We need jq to parse the JSON
           if ! command -v jq >/dev/null 2>&1; then
             brew install jq
           fi
-
           TAG_NAME="${CM_TAG:-$(git describe --tags --abbrev=0)}"
           echo "Tag: $TAG_NAME"
           API="https://api.github.com/repos/$GITHUB_REPOSITORY"
-
           TOKEN="${GITHUB_PAT:-$PERSONAL_ACCESS_TOKEN}"
-
           RELEASE_ID=$(curl -s -H "Authorization: token $TOKEN" "$API/releases/tags/$TAG_NAME" | jq -r .id)
-
           if [ "$RELEASE_ID" = "null" ] || [ -z "$RELEASE_ID" ]; then
             echo "Release not found for $TAG_NAME. Creating..."
             RESPONSE=$(curl -s -H "Authorization: token $TOKEN" \
@@ -112,7 +108,6 @@ workflows:
               "$API/releases")
             RELEASE_ID=$(echo "$RESPONSE" | jq -r .id)
           fi
-
           echo "Uploading $APP_NAME.zip to release $TAG_NAME (id: $RELEASE_ID)"
           curl -s -H "Authorization: token $TOKEN" \
                -H "Content-Type: application/zip" \
