@@ -1,7 +1,7 @@
+import 'package:alias_manager/sources/git_alias_source.dart';
+import 'package:alias_manager/sources/shell_alias_source.dart';
+import 'package:alias_manager/view/alias_list_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:git_alias_manager/sources/git_alias_source.dart';
-import 'package:git_alias_manager/sources/shell_alias_source.dart';
-import 'package:git_alias_manager/view/alias_list_screen.dart';
 import 'package:hux/hux.dart';
 
 void main() {

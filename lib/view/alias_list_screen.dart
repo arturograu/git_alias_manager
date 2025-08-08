@@ -1,10 +1,10 @@
+import 'package:alias_manager/sources/alias_source.dart';
+import 'package:alias_manager/sources/git_alias_source.dart';
+import 'package:alias_manager/sources/shell_alias_source.dart';
+import 'package:alias_manager/view/alias_form.dart';
+import 'package:alias_manager/view/alias_list.dart';
+import 'package:alias_manager/view/alias_type_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:git_alias_manager/sources/alias_source.dart';
-import 'package:git_alias_manager/sources/git_alias_source.dart';
-import 'package:git_alias_manager/sources/shell_alias_source.dart';
-import 'package:git_alias_manager/view/alias_form.dart';
-import 'package:git_alias_manager/view/alias_list.dart';
-import 'package:git_alias_manager/view/alias_type_selector.dart';
 
 class AliasListScreen extends StatefulWidget {
   const AliasListScreen({
