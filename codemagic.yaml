@@ -84,24 +84,7 @@ workflows:
         script: spctl --assess --type execute -v "build/macos/Build/Products/Release/$APP_NAME.app" || true
 
       - name: Upload notarized zip to GitHub Release
-        script: |
-          if ! command -v jq >/dev/null 2>&1; then
-            brew install jq
-          fi
-          TAG_NAME="${CM_TAG:-$(git describe --tags --abbrev=0)}"
-          API="https://api.github.com/repos/$GITHUB_REPOSITORY"
-          TOKEN="${GITHUB_PAT:-$PERSONAL_ACCESS_TOKEN}"
-          RELEASE_ID=$(curl -s -H "Authorization: token $TOKEN" "$API/releases/tags/$TAG_NAME" | jq -r .id)
-          if [ "$RELEASE_ID" = "null" ] || [ -z "$RELEASE_ID" ]; then
-            RESPONSE=$(curl -s -H "Authorization: token $TOKEN" \
-              -d "{\"tag_name\":\"$TAG_NAME\",\"name\":\"$TAG_NAME\",\"draft\":false,\"prerelease\":false}" \
-              "$API/releases")
-            RELEASE_ID=$(echo "$RESPONSE" | jq -r .id)
-          fi
-          curl -s -H "Authorization: token $TOKEN" \
-               -H "Content-Type: application/zip" \
-               --data-binary @"$APP_NAME.zip" \
-               "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$APP_NAME.zip"
+        script: fvm dart run scripts/upload_release_asset.dart
 
     artifacts:
       - $APP_NAME.zip
