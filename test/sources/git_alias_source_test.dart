@@ -1,7 +1,7 @@
+import 'package:alias_manager/shell/system_command_runner.dart';
+import 'package:alias_manager/sources/alias_source.dart';
+import 'package:alias_manager/sources/git_alias_source.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:git_alias_manager/shell/system_command_runner.dart';
-import 'package:git_alias_manager/sources/alias_source.dart';
-import 'package:git_alias_manager/sources/git_alias_source.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockSystemCommandRunner extends Mock implements SystemCommandRunner {}

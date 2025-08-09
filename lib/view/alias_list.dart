@@ -1,6 +1,6 @@
+import 'package:alias_manager/sources/alias_source.dart';
+import 'package:alias_manager/view/alias_type_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:git_alias_manager/sources/alias_source.dart';
-import 'package:git_alias_manager/view/alias_type_selector.dart';
 
 class AliasList extends StatelessWidget {
   const AliasList({

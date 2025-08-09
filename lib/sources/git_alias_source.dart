@@ -1,5 +1,5 @@
-import 'package:git_alias_manager/shell/system_command_runner.dart';
-import 'package:git_alias_manager/sources/alias_source.dart';
+import 'package:alias_manager/shell/system_command_runner.dart';
+import 'package:alias_manager/sources/alias_source.dart';
 
 class GitAliasSource implements AliasSource {
   GitAliasSource({SystemCommandRunner? commandRunner})

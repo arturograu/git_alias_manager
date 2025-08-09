@@ -1,16 +1,18 @@
-# Git Alias Manager
+# Alias Manager
 
-A cross-platform desktop Flutter app to view, add, and manage your global Git command aliases.
+A cross-platform desktop Flutter app to view, add, and manage your global command aliases — both for Git and your shell (e.g., Bash, Zsh).
 
-![Screenshot of the Git Alias Manager app](screenshot.png)
+![Demo of Alias Manager](demo.gif)
 
 ## About the project
 
-This is a minimal project built to solve a specific problem quickly and effectively. The architecture has been intentionally kept simple to focus on delivering value fast. For now, there's no dedicated state management solution in place, but that can evolve as the project grows.
+This is a minimal project built to solve a specific problem quickly and effectively: providing a simple UI to manage both Git aliases and shell command aliases.
+The architecture has been intentionally kept simple to focus on delivering value fast. For now, there's no dedicated state management solution in place, but that can evolve as the project grows.
 
 ## Features
 
 - List all global Git aliases
+- List shell aliases (from your shell configuration files)
 - Add new aliases (name + command)
 - Delete existing aliases
 - Material and dark theme support
@@ -19,6 +21,7 @@ This is a minimal project built to solve a specific problem quickly and effectiv
 ## Requirements
 
 - Git must be installed and available in your system PATH
+- For shell aliases: your shell configuration file (e.g., .bashrc, .zshrc) must be accessible
 
 ## Project Structure
 
