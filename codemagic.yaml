@@ -19,12 +19,14 @@ workflows:
         SIGNING_IDENTITY: "Developer ID Application: FLUTTERED SOCIEDAD LIMITADA (5NU7A4TGMF)"
         KEYCHAIN_PATH: /tmp/signing.keychain
         KEYCHAIN_PASSWORD: tempkey
-        GITHUB_REPOSITORY: arturograu/alias_manager
+        GITHUB_REPOSITORY: $GITHUB_REPOSITORY
+        APPLE_ID_EMAIL: $APPLE_ID_EMAIL
+        APP_SPECIFIC_PASSWORD: $APP_SPECIFIC_PASSWORD
+        TEAM_ID: $TEAM_ID
+        CERTIFICATE_PASSWORD: $CERTIFICATE_PASSWORD
+        PATH: $PATH:$HOME/.pub-cache/bin
       flutter: stable
       xcode: latest
-      groups:
-        - app-store-credentials
-        - github
       secure_files:
         - developer_id_cert
 
@@ -32,23 +34,16 @@ workflows:
       - name: Install FVM
         script: |
           dart pub global activate fvm
-          export PATH="$PATH":"$HOME/.pub-cache/bin"
           fvm --version
 
       - name: Flutter deps
-        script: |
-          export PATH="$PATH":"$HOME/.pub-cache/bin"
-          fvm flutter pub get
+        script: fvm flutter pub get
 
       - name: Enable macOS
-        script: |
-          export PATH="$PATH":"$HOME/.pub-cache/bin"
-          fvm flutter config --enable-macos-desktop
+        script: fvm flutter config --enable-macos-desktop
 
       - name: Build release
-        script: |
-          export PATH="$PATH":"$HOME/.pub-cache/bin"
-          fvm flutter build macos --release
+        script: fvm flutter build macos --release
 
       - name: Create keychain & import certificate
         script: |
@@ -60,7 +55,6 @@ workflows:
             -P "$CERTIFICATE_PASSWORD" \
             -T /usr/bin/codesign
           security list-keychain -d user -s "$KEYCHAIN_PATH"
-          # Ensure codesign can access the key without prompting
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
       - name: Codesign .app
@@ -84,12 +78,10 @@ workflows:
             --wait
 
       - name: Staple
-        script: |
-          xcrun stapler staple "build/macos/Build/Products/Release/$APP_NAME.app"
+        script: xcrun stapler staple "build/macos/Build/Products/Release/$APP_NAME.app"
 
       - name: Verify
-        script: |
-          spctl --assess --type execute -v "build/macos/Build/Products/Release/$APP_NAME.app" || true
+        script: spctl --assess --type execute -v "build/macos/Build/Products/Release/$APP_NAME.app" || true
 
       - name: Upload notarized zip to GitHub Release
         script: |
@@ -97,18 +89,15 @@ workflows:
             brew install jq
           fi
           TAG_NAME="${CM_TAG:-$(git describe --tags --abbrev=0)}"
-          echo "Tag: $TAG_NAME"
           API="https://api.github.com/repos/$GITHUB_REPOSITORY"
           TOKEN="${GITHUB_PAT:-$PERSONAL_ACCESS_TOKEN}"
           RELEASE_ID=$(curl -s -H "Authorization: token $TOKEN" "$API/releases/tags/$TAG_NAME" | jq -r .id)
           if [ "$RELEASE_ID" = "null" ] || [ -z "$RELEASE_ID" ]; then
-            echo "Release not found for $TAG_NAME. Creating..."
             RESPONSE=$(curl -s -H "Authorization: token $TOKEN" \
               -d "{\"tag_name\":\"$TAG_NAME\",\"name\":\"$TAG_NAME\",\"draft\":false,\"prerelease\":false}" \
               "$API/releases")
             RELEASE_ID=$(echo "$RESPONSE" | jq -r .id)
           fi
-          echo "Uploading $APP_NAME.zip to release $TAG_NAME (id: $RELEASE_ID)"
           curl -s -H "Authorization: token $TOKEN" \
                -H "Content-Type: application/zip" \
                --data-binary @"$APP_NAME.zip" \
