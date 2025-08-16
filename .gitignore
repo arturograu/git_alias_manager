@@ -12,6 +12,8 @@
 .swiftpm/
 migrate_working_dir/
 dist/
+sign_and_notarize.sh
+notary_log.json
 
 # IntelliJ related
 *.iml
